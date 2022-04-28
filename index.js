@@ -7,7 +7,7 @@ const puppeteer = require("puppeteer");
 
 app.get('/', (req, res) => {
   try {
-    const browser = await puppeteer.launch({
+      const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox',  # 不使用沙箱
              '--no-startup-window',  # 禁止开始界面
@@ -48,6 +48,7 @@ app.get('/', (req, res) => {
 
     res.set('Content-Type', 'image/png');
     res.send(image);
+    
   }
   catch (error) {
     console.log(error)
