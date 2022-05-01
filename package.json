@@ -7,11 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
+  "author": "Hsiao-Te Hu",
+  "license": "ISC",
   "dependencies": {
     "express": "^4.18.0",
     "puppeteer": "^13.7.0"
-  },
-  "author": "Hsiao-Te Hu",
-  "keywords": ["puppeteer", "express"],
-  "license": "MIT"
+  }
 }
