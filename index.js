@@ -38,7 +38,6 @@ const puppeteer = require('puppeteer'),
             "/*.facebook.com",
             "/*.google.com",
             "/*.googleadservices.com",
-            "/*.googleapis.com",
             "/*.googlesyndication.com",
             "/*.line-scdn.net",
             "/*.moatads.com",
@@ -125,10 +124,7 @@ app.get('/bluecoat', async (req, res) => {
       height: 540,
     });
 
-    await page.goto('https://sitereview.bluecoat.com/', {
-      waitUntil: 'networkidle0'
-    });
-
+    await page.goto('https://sitereview.bluecoat.com/');
     if (req.query.url) {
         await page.click('#txtUrl');
         await page.keyboard.type(req.query.url);
