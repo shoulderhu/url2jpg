@@ -2,7 +2,7 @@ const express = require('express'),
       app = express(),
       port = process.env.PORT || 5000;
 const puppeteer = require('puppeteer'),
-      args = ['--no-sandbox',                              // 不使用沙箱
+      args = ['--no-sandbox',                             // 不使用沙箱
              '--no-startup-window',                       // 禁止开始界面
              '--incognito',                               // 隐身模式
              '--disable-infobars',                        // 禁止信息提示栏
@@ -29,15 +29,60 @@ const puppeteer = require('puppeteer'),
              '--safebrowsing-disable-auto-update',
              '--no-first-run',                            // 禁止首次运行界面
              '--hide-scrollbars',                         // 隐藏滚动栏
-             '--ignore-certificate-errors',               // 忽略证书错误
-           ];
+             '--ignore-certificate-errors'                // 忽略证书错误
+             // '--proxy-server=127.0.0.1:8080'
+           ],
+      ads = ["/*.addthis.com",
+            "/*.addthisedge.com",
+            "/*.doubleclick.net",
+            "/*.facebook.com",
+            "/*.google.com",
+            "/*.googleadservices.com",
+            "/*.googleapis.com",
+            "/*.googlesyndication.com",
+            "/*.line-scdn.net",
+            "/*.moatads.com",
+            "/*.popin.cc",
+            "/*.rfp.fout.jp",
+            "/*.scorecardresearch.com",
+            'ad-specs.guoshipartners.com',
+            'adservice.google.com',
+            'adservice.google.com.tw',
+            'analytics.google.com',
+            'certify-js.alexametrics.com',
+            'clients1.google.com',
+            'cms.analytics.yahoo.com',
+            'co-in.io',
+            'connect.facebook.net',
+            'cse.google.com',
+            'go.trvdp.com',
+            'itadapi.ithome.com.tw',
+            'member.technews.tw',
+            'onead.onevision.com.tw',
+            'pv.ltn.com.tw',
+            'redirect.prod.experiment.routing.cloudfront.aws.a2z.com',
+            'social-plugins.line.me',
+            'static.xx.fbcdn.net',
+            'stg.truvidplayer.com',
+            'sync.search.spotxchange.com',
+            'technews.tw/wp-admin/*',
+            'technews.tw/wp-content/plugins/*',
+            'ws.coincap.io',
+            'www.google-analytics.com',
+            'www.googletagmanager.com',
+            'www.googletagservices.com',
+            'www.gstatic.com',
+            'www.ithome.com.tw/modules/statistics/*',
+            'www.ltn.com.tw',
+            'www5.technews.tw',
+      ]
 
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-
+/*
 app.get("/", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
@@ -66,7 +111,7 @@ app.get("/", async (req, res) => {
     console.log(error);
   }
 });
-
+*/
 
 app.get('/bluecoat', async (req, res) => {
   try {
@@ -80,7 +125,10 @@ app.get('/bluecoat', async (req, res) => {
       height: 540,
     });
 
-    await page.goto('https://sitereview.bluecoat.com/')
+    await page.goto('https://sitereview.bluecoat.com/', {
+      waitUntil: 'networkidle0'
+    });
+
     if (req.query.url) {
         await page.click('#txtUrl');
         await page.keyboard.type(req.query.url);
@@ -108,7 +156,6 @@ app.get('/bluecoat', async (req, res) => {
   }
 });
 
-
 app.get('/virustotal', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
@@ -121,11 +168,21 @@ app.get('/virustotal', async (req, res) => {
       height: 1080,
     });
 
-    if (req.query.search) {
-      await page.goto('https://www.virustotal.com/gui/home/search', {
-        waitUntil: 'networkidle0'
-      })
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
 
+    await page.goto('https://www.virustotal.com/gui/home/search', {
+      waitUntil: 'networkidle0'
+    });
+
+    if (req.query.search) {
       await page.keyboard.type(req.query.search);
 
       await page.keyboard.press('Enter');
@@ -134,9 +191,6 @@ app.get('/virustotal', async (req, res) => {
       });
 
       await timeout(1000);
-    }
-    else {
-      await page.goto('https://www.virustotal.com/gui/home/upload')
     }
 
     const image = await page.screenshot({
@@ -156,6 +210,229 @@ app.get('/virustotal', async (req, res) => {
   }
 });
 
+app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://www.ithome.com.tw/${req.params.cat}/${req.params.id}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      clip: {
+        x: 310,
+        y: 140,
+        width: 1300,
+        height: 850
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/png');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://technews.tw/${req.params.year}/${req.params.mon}/${req.params.day}/${req.params.title}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      clip: {
+        x: 315,
+        y: 230,
+        width: 980,
+        height: 730
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/png');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+// Liberty Times Net
+app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https:/3c.ltn.com.tw/news/${req.params.id}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      clip: {
+        x: 370,
+        y: 190,
+        width: 860,
+        height: 780
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/png');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://www.twcert.org.tw/tw/${req.params.id}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      clip: {
+        x: 370,
+        y: 240,
+        width: 1180,
+        height: 700
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/png');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/blog.trendmicro.com.tw', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    // await page.setCacheEnabled(false);
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    if (req.query.p) {
+      await page.goto(`https://blog.trendmicro.com.tw/?p=${req.query.p}`, {
+        waitUntil: 'networkidle0'
+      })
+    }
+    else {
+      await page.goto(`blog.trendmicro.com.tw`, {
+        waitUntil: 'networkidle0'
+      })
+    }
+
+    const image = await page.screenshot({
+      clip: {
+        x: 430,
+        y: 150,
+        width: 660,
+        height: 730
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/png');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
 
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
