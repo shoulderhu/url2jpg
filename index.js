@@ -76,11 +76,18 @@ const puppeteer = require('puppeteer'),
             'www.ltn.com.tw',
             'www5.technews.tw',
       ]
+const swaggerUi = require('swagger-ui-express'),
+      swaggerDocument = require('./swagger.json');
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
+
+app.get('/', (req, res) => {
+   res.redirect(302, '/api-docs');
+});
 
 /*
 app.get("/", async (req, res) => {
@@ -113,7 +120,7 @@ app.get("/", async (req, res) => {
 });
 */
 
-app.get('/bluecoat/:url([A-Za-z0-9+/=]+)', async (req, res) => {
+app.get('/bluecoat', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -126,13 +133,15 @@ app.get('/bluecoat/:url([A-Za-z0-9+/=]+)', async (req, res) => {
     });
 
     await page.goto('https://sitereview.bluecoat.com/');
-    await page.click('#txtUrl');
-    await page.keyboard.type(atob(req.params.url));
+    if (req.query.url) {
+        await page.click('#txtUrl');
+        await page.keyboard.type(req.query.url);
 
-    await page.click('#btnLookup');
-    await page.waitForNavigation({
-      waitUntil: 'networkidle0'
-    });
+        await page.click('#btnLookup');
+        await page.waitForNavigation({
+          waitUntil: 'networkidle0'
+        });
+    }
 
     const image = await page.screenshot({
       clip: {
@@ -205,7 +214,7 @@ app.get('/virustotal', async (req, res) => {
   }
 });
 
-app.get('/ithome/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
+app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -227,7 +236,7 @@ app.get('/ithome/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
       }
     })
 
-    await page.goto(atob(req.params.url), {
+    await page.goto(`https://www.ithome.com.tw/${req.params.cat}/${req.params.id}`, {
       waitUntil: 'networkidle0'
     })
 
@@ -248,7 +257,7 @@ app.get('/ithome/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
   }
 })
 
-app.get('/technews/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
+app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -270,7 +279,7 @@ app.get('/technews/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
       }
     })
 
-    await page.goto(atob(req.params.url), {
+    await page.goto(`https://technews.tw/${req.params.year}/${req.params.mon}/${req.params.day}/${req.params.title}`, {
       waitUntil: 'networkidle0'
     })
 
@@ -292,7 +301,7 @@ app.get('/technews/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
 })
 
 // Liberty Times Net
-app.get('/3cltn/:url([A-Za-z0-9+/=]{36,})', async (req, res) => {
+app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -314,7 +323,7 @@ app.get('/3cltn/:url([A-Za-z0-9+/=]{36,})', async (req, res) => {
       }
     })
 
-    await page.goto(atob(req.params.url), {
+    await page.goto(`https:/3c.ltn.com.tw/news/${req.params.id}`, {
       waitUntil: 'networkidle0'
     })
 
@@ -335,7 +344,7 @@ app.get('/3cltn/:url([A-Za-z0-9+/=]{36,})', async (req, res) => {
   }
 })
 
-app.get('/twcert/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
+app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -357,7 +366,7 @@ app.get('/twcert/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
       }
     })
 
-    await page.goto(atob(req.params.url), {
+    await page.goto(`https://www.twcert.org.tw/tw/${req.params.id}`, {
       waitUntil: 'networkidle0'
     })
 
@@ -378,7 +387,7 @@ app.get('/twcert/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
   }
 })
 
-app.get('/trend/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
+app.get('/blog.trendmicro.com.tw', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: args
@@ -401,18 +410,16 @@ app.get('/trend/:url([A-Za-z0-9+/=]{40,})', async (req, res) => {
       }
     })
 
-    await page.goto(atob(req.params.url), {
-      waitUntil: 'networkidle0'
-    })
-    /*
     if (req.query.p) {
-
+      await page.goto(`https://blog.trendmicro.com.tw/?p=${req.query.p}`, {
+        waitUntil: 'networkidle0'
+      })
     }
     else {
       await page.goto(`blog.trendmicro.com.tw`, {
         waitUntil: 'networkidle0'
       })
-    }*/
+    }
 
     const image = await page.screenshot({
       clip: {
