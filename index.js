@@ -93,7 +93,12 @@ const puppeteer = require('puppeteer'),
       ]
 const swaggerUi = require('swagger-ui-express'),
       swaggerDocument = require('./swagger.json');
-const compression = require('compression');
+const compression = require('compression'),
+      shouldCompress = (req, res) => {
+        if (/image\/jpeg/.test(res.getHeader('Content-Type'))) { return true; }
+        if (req.headers['x-no-compression']) { return false; }
+        return compression.filter(req, res);
+      };
 
 
 function timeout(ms) {
@@ -101,7 +106,10 @@ function timeout(ms) {
 };
 
 
-app.use(compression());
+app.use(compression({
+  filter: shouldCompress
+}));
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
