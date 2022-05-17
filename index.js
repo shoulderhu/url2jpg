@@ -23,6 +23,21 @@ const puppeteer = require('puppeteer'),
              '--disable-background-timer-throttling',     // 禁止后台任务冻结
              '--disable-client-side-phishing-detection',  // 禁止危险页面检测
              '--disable-logging',
+             '--disable-backgrounding-occluded-windows',
+             '--disable-breakpad',
+             '--disable-domain-reliability',
+             '--disable-features=AudioServiceOutOfProcess',
+             '--disable-ipc-flooding-protection',
+             '--disable-notifications',
+             '--disable-offer-store-unmasked-wallet-cards',
+             '--disable-print-preview',
+             '--disable-renderer-backgrounding',
+             '--disable-speech-api',
+             '--ignore-gpu-blacklist',
+             '--metrics-recording-only',
+             '--no-pings',
+             '--password-store=basic',
+             '--use-mock-keychain',
              '--mute-audio',                              // 静音
              '--single-process',                          // 单进程
              '--no-zygote',                               // 禁止zygote进程fork子进程
@@ -78,47 +93,20 @@ const puppeteer = require('puppeteer'),
       ]
 const swaggerUi = require('swagger-ui-express'),
       swaggerDocument = require('./swagger.json');
+const compression = require('compression');
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+
+app.use(compression());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 app.get('/', (req, res) => {
    res.redirect(302, '/api-docs');
 });
-
-/*
-app.get("/", async (req, res) => {
-  try {
-    const browser = await puppeteer.launch({
-      args: args
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({
-      width: 1920,
-      height: 1200,
-    })
-
-    if (!req.query.url) {
-        await page.goto('https://example.com');
-    }
-    else {
-      await page.goto(req.query.url);
-    }
-
-    const image = await page.screenshot({fullPage : req.query.full});
-    await browser.close();
-
-    res.set('Content-Type', 'image/png');
-    res.send(image);
-  } catch (error) {
-    console.log(error);
-  }
-});
-*/
 
 app.get('/bluecoat', async (req, res) => {
   try {
@@ -144,6 +132,8 @@ app.get('/bluecoat', async (req, res) => {
     }
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 390,
         y: 230,
@@ -153,7 +143,7 @@ app.get('/bluecoat', async (req, res) => {
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -198,6 +188,8 @@ app.get('/virustotal', async (req, res) => {
     }
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 330,
         y: 81,
@@ -207,7 +199,7 @@ app.get('/virustotal', async (req, res) => {
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -241,6 +233,8 @@ app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
     })
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 310,
         y: 140,
@@ -250,7 +244,7 @@ app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -284,6 +278,8 @@ app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (re
     })
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 315,
         y: 230,
@@ -293,7 +289,7 @@ app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (re
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -328,6 +324,8 @@ app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
     })
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 370,
         y: 190,
@@ -337,7 +335,7 @@ app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -371,6 +369,8 @@ app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', as
     })
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 370,
         y: 240,
@@ -380,7 +380,7 @@ app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', as
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
@@ -422,6 +422,8 @@ app.get('/blog.trendmicro.com.tw', async (req, res) => {
     }
 
     const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
       clip: {
         x: 430,
         y: 150,
@@ -431,7 +433,7 @@ app.get('/blog.trendmicro.com.tw', async (req, res) => {
     });
     await browser.close();
 
-    res.set('Content-Type', 'image/png');
+    res.set('Content-Type', 'image/jpeg');
     res.send(image);
   } catch (error) {
     console.log(error);
