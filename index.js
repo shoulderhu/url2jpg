@@ -44,8 +44,8 @@ const puppeteer = require('puppeteer'),
              '--safebrowsing-disable-auto-update',
              '--no-first-run',                            // 禁止首次运行界面
              '--hide-scrollbars',                         // 隐藏滚动栏
-             '--ignore-certificate-errors',                // 忽略证书错误
-             '--proxy-server=127.0.0.1:8080'
+             '--ignore-certificate-errors'                // 忽略证书错误
+             // '--proxy-server=127.0.0.1:8080'
            ],
       ads = ["/*.addthis.com",
             "/*.addthisedge.com",
