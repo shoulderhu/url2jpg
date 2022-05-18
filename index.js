@@ -44,8 +44,8 @@ const puppeteer = require('puppeteer'),
              '--safebrowsing-disable-auto-update',
              '--no-first-run',                            // 禁止首次运行界面
              '--hide-scrollbars',                         // 隐藏滚动栏
-             '--ignore-certificate-errors'                // 忽略证书错误
-             // '--proxy-server=127.0.0.1:8080'
+             '--ignore-certificate-errors',                // 忽略证书错误
+             '--proxy-server=127.0.0.1:8080'
            ],
       ads = ["/*.addthis.com",
             "/*.addthisedge.com",
@@ -60,10 +60,14 @@ const puppeteer = require('puppeteer'),
             "/*.popin.cc",
             "/*.rfp.fout.jp",
             "/*.scorecardresearch.com",
+            "/*.servedby-buysellads.com",
             'ad-specs.guoshipartners.com',
             'adservice.google.com',
             'adservice.google.com.tw',
             'analytics.google.com',
+            'cdn.carbonads.com',
+            'cdnjs.cloudflare.com/ajax/libs/datatables/*',
+            'srv.carbonads.net',
             'certify-js.alexametrics.com',
             'clients1.google.com',
             'cms.analytics.yahoo.com',
@@ -90,6 +94,7 @@ const puppeteer = require('puppeteer'),
             'www.ithome.com.tw/modules/statistics/*',
             'www.ltn.com.tw',
             'www5.technews.tw',
+            'www.abuseipdb.com/img/bitcoin.svg'
       ]
 const swaggerUi = require('swagger-ui-express'),
       swaggerDocument = require('./swagger.json');
@@ -203,6 +208,51 @@ app.get('/virustotal', async (req, res) => {
         y: 81,
         width: 1165,
         height: 530
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.get('/abuseipdb/:ip(\\d+\.\\d+\.\\d+\.\\d+)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1200,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://www.abuseipdb.com/check/${req.params.ip}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 405,
+        y: 333,
+        width: 1110,
+        height: 860
       }
     });
     await browser.close();
