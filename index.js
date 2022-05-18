@@ -112,6 +112,8 @@ function timeout(ms) {
 };
 
 
+puppeteer.use(StealthPlugin())
+
 app.use(compression({
   filter: shouldCompress
 }));
@@ -124,7 +126,6 @@ app.get('/', (req, res) => {
 
 app.get('/bluecoat', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -167,7 +168,6 @@ app.get('/bluecoat', async (req, res) => {
 
 app.get('/virustotal', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -224,7 +224,6 @@ app.get('/virustotal', async (req, res) => {
 
 app.get('/abuseipdb/:ip(\\d+\.\\d+\.\\d+\.\\d+)', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -269,7 +268,6 @@ app.get('/abuseipdb/:ip(\\d+\.\\d+\.\\d+\.\\d+)', async (req, res) => {
 
 app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -315,7 +313,6 @@ app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
 
 app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -362,7 +359,6 @@ app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (re
 // Liberty Times Net
 app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -408,7 +404,6 @@ app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
 
 app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
@@ -454,7 +449,6 @@ app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', as
 
 app.get('/blog.trendmicro.com.tw', async (req, res) => {
   try {
-    puppeteer.use(StealthPlugin())
     const browser = await puppeteer.launch({
       args: args
     });
