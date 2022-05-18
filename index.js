@@ -245,9 +245,8 @@ app.get('/abuseipdb/:ip(\\d+\.\\d+\.\\d+\.\\d+)', async (req, res) => {
       }
     })
 
-    await page.goto(`https://www.abuseipdb.com/check/${req.params.ip}`, {
-      waitUntil: 'networkidle0'
-    })
+    await page.goto(`https://www.abuseipdb.com/check/${req.params.ip}`);
+    await page.waitForSelector('.well');
 
     const image = await page.screenshot({
       type: 'jpeg',
