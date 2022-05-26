@@ -50,6 +50,9 @@ const puppeteer = require('puppeteer-extra'),
            ],
       ads = ["/*.addthis.com",
             "/*.addthisedge.com",
+            "/*.aralego.com",
+            "/*.criteo.com",
+            "/*bidswitch.net",
             "/*.doubleclick.net",
             "/*.facebook.com",
             "/*.google.com",
@@ -58,17 +61,27 @@ const puppeteer = require('puppeteer-extra'),
             "/*.googlesyndication.com",
             "/*.line-scdn.net",
             "/*.moatads.com",
+            "/*.openx.net",
             "/*.popin.cc",
             "/*.rfp.fout.jp",
+            "/*.rubiconproject.com",
             "/*.scorecardresearch.com",
             "/*.servedby-buysellads.com",
+            "/*.taboola.com",
+            "/*.wp.com",
+            'a.teads.tv',
+            'ad2.apx.appier.net',
             'ad-specs.guoshipartners.com',
             'adservice.google.com',
             'adservice.google.com.tw',
             'analytics.google.com',
+            'bnextmedia.s3.hicloud.net.tw/dp_cp/*',
+            'cdn.bnextmedia.com.tw/bn/images/*',
             'cdn.carbonads.com',
             'cdnjs.cloudflare.com/ajax/libs/datatables/*',
+            'dpm.demdex.net',
             'srv.carbonads.net',
+            'c2shb.ssp.yahoo.com',
             'certify-js.alexametrics.com',
             'clients1.google.com',
             'cms.analytics.yahoo.com',
@@ -76,26 +89,45 @@ const puppeteer = require('puppeteer-extra'),
             'connect.facebook.net',
             'cse.google.com',
             'go.trvdp.com',
+            'ib.adnxs.com',
             'itadapi.ithome.com.tw',
             'member.technews.tw',
+            'misc.udn.com',
             'onead.onevision.com.tw',
+            'p.udn.com.tw',
             'pv.ltn.com.tw',
+            'ps.eyeota.net',
             'redirect.prod.experiment.routing.cloudfront.aws.a2z.com',
             'social-plugins.line.me',
             'static.xx.fbcdn.net',
+            'static.criteo.net',
             'stg.truvidplayer.com',
             'sync.search.spotxchange.com',
+            'sync.crwdcntrl.net',
+            'prebid.scupio.com',
             'technews.tw/wp-admin/*',
             'technews.tw/wp-content/plugins/*',
+            'udn.com/static/img/*',
+            'udesign.udnfunlife.com',
             'ws.coincap.io',
+            'www.abuseipdb.com/img/bitcoin.svg',
+            'www.bnext.com.tw/ucf-sw.js',
+            'www.bnext.com.tw/api/*',
+            'www.bnext.com.tw/icons/*',
+            'www.bnext.com.tw/lottie/scroll-to-top.json',
+            'www.bnext.com.tw/lottie/clapping.json',
+            'www.bnext.com.tw/lottie/clapping-hover.json',
             'www.google-analytics.com',
             'www.googletagmanager.com',
             'www.googletagservices.com',
             'www.gstatic.com',
+            'www.inside.com.tw/assets/js/*',
+            'www.inside.com.tw/assets/images/*',
+            'www.inside.com.tw/cdn-cgi/scripts/*',
             'www.ithome.com.tw/modules/statistics/*',
             'www.ltn.com.tw',
-            'www5.technews.tw',
-            'www.abuseipdb.com/img/bitcoin.svg'
+            'www.youtube.com',
+            'www5.technews.tw'
       ]
 const swaggerUi = require('swagger-ui-express'),
       swaggerDocument = require('./swagger.json');
@@ -379,7 +411,7 @@ app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
       }
     })
 
-    await page.goto(`https:/3c.ltn.com.tw/news/${req.params.id}`, {
+    await page.goto(`https://3c.ltn.com.tw/news/${req.params.id}`, {
       waitUntil: 'networkidle0'
     })
 
@@ -489,6 +521,141 @@ app.get('/blog.trendmicro.com.tw', async (req, res) => {
         y: 150,
         width: 660,
         height: 730
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+// Business Next
+app.get('/www.bnext.com.tw/article/:id(\\d+)/:title', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://www.bnext.com.tw/article/${req.params.id}/${req.params.title}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 339,
+        y: 137,
+        width: 1200,
+        height: 412
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/www.inside.com.tw/article/:title(\\d+-*)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://www.inside.com.tw/article/${req.params.title}`, {
+      waitUntil: 'networkidle0'
+    })
+
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 590,
+        y: 240,
+        width: 740,
+        height: 700
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/udn.com/news/story/:id1(\\d+)/:id2(\\d+)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://udn.com/news/story/${req.params.id1}/${req.params.id2}`)
+    await page.waitForSelector('#keywords');
+
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 315,
+        y: 465,
+        width: 930,
+        height: 400
       }
     });
     await browser.close();
