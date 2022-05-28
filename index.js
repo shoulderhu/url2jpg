@@ -45,7 +45,7 @@ const puppeteer = require('puppeteer-extra'),
              '--safebrowsing-disable-auto-update',
              '--no-first-run',                            // 禁止首次运行界面
              '--hide-scrollbars',                         // 隐藏滚动栏
-             '--ignore-certificate-errors'                // 忽略证书错误
+             '--ignore-certificate-errors',               // 忽略证书错误
              // '--proxy-server=127.0.0.1:8080'
            ],
       ads = ["/*.addthis.com",
@@ -254,50 +254,6 @@ app.get('/virustotal', async (req, res) => {
   }
 });
 
-app.get('/abuseipdb/:ip(\\d+\.\\d+\.\\d+\.\\d+)', async (req, res) => {
-  try {
-    const browser = await puppeteer.launch({
-      args: args
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({
-      width: 1920,
-      height: 1200,
-    });
-
-    await page.setRequestInterception(true);
-    page.on("request", (request) => {
-      if (ads.find((pattern) => request.url().match(pattern))) {
-        request.abort();
-      }
-      else {
-        request.continue();
-      }
-    })
-
-    await page.goto(`https://www.abuseipdb.com/check/${req.params.ip}`);
-    await page.waitForSelector('.well');
-
-    const image = await page.screenshot({
-      type: 'jpeg',
-      quality: 80,
-      clip: {
-        x: 405,
-        y: 333,
-        width: 1110,
-        height: 860
-      }
-    });
-    await browser.close();
-
-    res.set('Content-Type', 'image/jpeg');
-    res.send(image);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
 app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
@@ -320,10 +276,8 @@ app.get('/www.ithome.com.tw/:cat(news|tech)/:id(\\d+)', async (req, res) => {
       }
     })
 
-    await page.goto(`https://www.ithome.com.tw/${req.params.cat}/${req.params.id}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://www.ithome.com.tw/${req.params.cat}/${req.params.id}`)
+    await page.waitForSelector('.content-summary');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -365,10 +319,8 @@ app.get('/technews.tw/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (re
       }
     })
 
-    await page.goto(`https://technews.tw/${req.params.year}/${req.params.mon}/${req.params.day}/${req.params.title}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://technews.tw/${req.params.year}/${req.params.mon}/${req.params.day}/${req.params.title}`)
+    await page.waitForSelector('.entry-title');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -411,10 +363,8 @@ app.get('/3c.ltn.com.tw/news/:id(\\d+)', async (req, res) => {
       }
     })
 
-    await page.goto(`https://3c.ltn.com.tw/news/${req.params.id}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://3c.ltn.com.tw/news/${req.params.id}`);
+    await page.waitForSelector('.time');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -456,10 +406,8 @@ app.get('/www.twcert.org.tw/tw/:id(cp-\\d{3}-\\d{4,}-[0-9a-z]{5}-\\d\.html)', as
       }
     })
 
-    await page.goto(`https://www.twcert.org.tw/tw/${req.params.id}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://www.twcert.org.tw/tw/${req.params.id}`);
+    await page.waitForSelector('.title');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -486,7 +434,6 @@ app.get('/blog.trendmicro.com.tw', async (req, res) => {
     });
 
     const page = await browser.newPage();
-    // await page.setCacheEnabled(false);
     await page.setViewport({
       width: 1920,
       height: 1080,
@@ -503,9 +450,8 @@ app.get('/blog.trendmicro.com.tw', async (req, res) => {
     })
 
     if (req.query.p) {
-      await page.goto(`https://blog.trendmicro.com.tw/?p=${req.query.p}`, {
-        waitUntil: 'networkidle0'
-      })
+      await page.goto(`https://blog.trendmicro.com.tw/?p=${req.query.p}`);
+      await page.waitForSelector('.entry-title');
     }
     else {
       await page.goto(`blog.trendmicro.com.tw`, {
@@ -555,10 +501,8 @@ app.get('/www.bnext.com.tw/article/:id(\\d+)/:title', async (req, res) => {
       }
     })
 
-    await page.goto(`https://www.bnext.com.tw/article/${req.params.id}/${req.params.title}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://www.bnext.com.tw/article/${req.params.id}/${req.params.title}`);
+    await page.waitForSelector('.head-title');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -600,10 +544,8 @@ app.get('/www.inside.com.tw/article/:title(\\d+-*)', async (req, res) => {
       }
     })
 
-    await page.goto(`https://www.inside.com.tw/article/${req.params.title}`, {
-      waitUntil: 'networkidle0'
-    })
-
+    await page.goto(`https://www.inside.com.tw/article/${req.params.title}`);
+    await page.waitForSelector('#article_content');
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
@@ -645,17 +587,16 @@ app.get('/udn.com/news/story/:id1(\\d+)/:id2(\\d+)', async (req, res) => {
       }
     })
 
-    await page.goto(`https://udn.com/news/story/${req.params.id1}/${req.params.id2}`)
+    await page.goto(`https://udn.com/news/story/${req.params.id1}/${req.params.id2}`);
     await page.waitForSelector('#keywords');
-
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
       clip: {
         x: 315,
-        y: 465,
-        width: 930,
-        height: 400
+        y: 515,
+        width: 940,
+        height: 500
       }
     });
     await browser.close();
