@@ -501,8 +501,9 @@ app.get('/www.bnext.com.tw/article/:id(\\d+)/:title', async (req, res) => {
       }
     })
 
-    await page.goto(`https://www.bnext.com.tw/article/${req.params.id}/${req.params.title}`);
-    await page.waitForSelector('.head-title');
+    await page.goto(`https://www.bnext.com.tw/article/${req.params.id}/${req.params.title}`, {
+        waitUntil: 'networkidle0'
+    });
     const image = await page.screenshot({
       type: 'jpeg',
       quality: 80,
