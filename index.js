@@ -45,11 +45,13 @@ const puppeteer = require('puppeteer-extra'),
              '--safebrowsing-disable-auto-update',
              '--no-first-run',                            // 禁止首次运行界面
              '--hide-scrollbars',                         // 隐藏滚动栏
-             '--ignore-certificate-errors',               // 忽略证书错误
-             // '--proxy-server=127.0.0.1:8080'
+             '--ignore-certificate-errors'                // 忽略证书错误
+             //'--proxy-server=127.0.0.1:8080'
            ],
       ads = ["/*.addthis.com",
             "/*.addthisedge.com",
+            "/*.analytics.yahoo.com",
+            "/*.at.atwola.com",
             "/*.aralego.com",
             "/*.criteo.com",
             "/*bidswitch.net",
@@ -63,6 +65,7 @@ const puppeteer = require('puppeteer-extra'),
             "/*.moatads.com",
             "/*.openx.net",
             "/*.popin.cc",
+            "/*.pubmatic.com",
             "/*.rfp.fout.jp",
             "/*.rubiconproject.com",
             "/*.scorecardresearch.com",
@@ -72,10 +75,17 @@ const puppeteer = require('puppeteer-extra'),
             'a.teads.tv',
             'ad2.apx.appier.net',
             'ad-specs.guoshipartners.com',
+            'adserver-toy.adtechjp.com',
             'adservice.google.com',
             'adservice.google.com.tw',
             'analytics.google.com',
+            'assets.video.yahoo.net',
+            'bats.video.yahoo.com',
             'bnextmedia.s3.hicloud.net.tw/dp_cp/*',
+            'buzzorange.com/techorange/app/plugins/*',
+            'buzzorange.com/techorange/app/themes/ceris/js/vendors/*',
+            'buzzorange.com/techorange/wp/wp-admin/*',
+            'c2shb.ssp.yahoo.com',
             'cdn.bnextmedia.com.tw/bn/images/*',
             'cdn.carbonads.com',
             'cdnjs.cloudflare.com/ajax/libs/datatables/*',
@@ -89,15 +99,19 @@ const puppeteer = require('puppeteer-extra'),
             'connect.facebook.net',
             'cse.google.com',
             'go.trvdp.com',
+            'guce.yahoo.com',
             'ib.adnxs.com',
             'itadapi.ithome.com.tw',
+            'jill.fc.yahoo.com',
             'member.technews.tw',
             'misc.udn.com',
             'onead.onevision.com.tw',
             'p.udn.com.tw',
+            'platform.twitter.com',
             'pv.ltn.com.tw',
             'ps.eyeota.net',
             'redirect.prod.experiment.routing.cloudfront.aws.a2z.com',
+            's.yimg.com/nn/lib/metro/g/myy/advertisement_0.0.19.js',
             'social-plugins.line.me',
             'static.xx.fbcdn.net',
             'static.criteo.net',
@@ -107,8 +121,12 @@ const puppeteer = require('puppeteer-extra'),
             'prebid.scupio.com',
             'technews.tw/wp-admin/*',
             'technews.tw/wp-content/plugins/*',
+            'tw.news.yahoo.com/comments/*',
+            'udc.yahoo.com',
             'udn.com/static/img/*',
             'udesign.udnfunlife.com',
+            'video.adaptv.advertising.com',
+            'web-oao.ssp.yahoo.com/admax/*',
             'ws.coincap.io',
             'www.abuseipdb.com/img/bitcoin.svg',
             'www.bnext.com.tw/ucf-sw.js',
@@ -121,11 +139,14 @@ const puppeteer = require('puppeteer-extra'),
             'www.googletagmanager.com',
             'www.googletagservices.com',
             'www.gstatic.com',
+            'www.informationsecurity.com.tw/images/*',
             'www.inside.com.tw/assets/js/*',
             'www.inside.com.tw/assets/images/*',
             'www.inside.com.tw/cdn-cgi/scripts/*',
+            'www.instagram.com',
             'www.ithome.com.tw/modules/statistics/*',
             'www.ltn.com.tw',
+            'www.yahoo.com',
             'www.youtube.com',
             'www5.technews.tw'
       ]
@@ -226,13 +247,17 @@ app.get('/virustotal', async (req, res) => {
 
     if (req.query.search) {
       await page.keyboard.type(req.query.search);
-
       await page.keyboard.press('Enter');
-      await page.waitForNavigation({
-        waitUntil: 'networkidle0'
-      });
 
-      await timeout(1000);
+      try {
+        await page.waitForNavigation({
+          waitUntil: 'networkidle0'
+        });
+
+        await timeout(1000);
+      } catch (e) {
+        console.log(e);
+      }
     }
 
     const image = await page.screenshot({
@@ -245,6 +270,7 @@ app.get('/virustotal', async (req, res) => {
         height: 530
       }
     });
+
     await browser.close();
 
     res.set('Content-Type', 'image/jpeg');
@@ -598,6 +624,187 @@ app.get('/udn.com/news/story/:id1(\\d+)/:id2(\\d+)', async (req, res) => {
         y: 515,
         width: 940,
         height: 500
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/tw.news.yahoo.com/:id(*-\\d{9}\.html)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://tw.news.yahoo.com/${req.params.id}`, {
+      waitUntil: 'domcontentloaded'
+    });
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 330,
+        y: 560,
+        width: 910,
+        height: 740
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/buzzorange.com/techorange/:year(\\d{4})/:mon(\\d{2})/:day(\\d{2})/:title', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://buzzorange.com/techorange/${req.params.year}/${req.params.mon}/${req.params.day}/${req.params.title}`)
+    await page.waitForSelector('.single-content__wrap');
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 370,
+        y: 250,
+        width: 980,
+        height: 640
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/www.informationsecurity.com.tw/article/article_detail.aspx', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    if (req.query.aid) {
+      await page.goto(`https://www.informationsecurity.com.tw/article/article_detail.aspx?aid=${req.query.aid}`);
+      await page.waitForSelector('.text');
+    }
+    else {
+      await page.goto(`www.informationsecurity.com.tw`, {
+        waitUntil: 'networkidle0'
+      })
+    }
+
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 355,
+        y: 280,
+        width: 775,
+        height: 730
+      }
+    });
+    await browser.close();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(image);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+app.get('/chinese.engadget.com/:id(*-\\d{9}\.html)', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: args
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (ads.find((pattern) => request.url().match(pattern))) {
+        request.abort();
+      }
+      else {
+        request.continue();
+      }
+    })
+
+    await page.goto(`https://chinese.engadget.com/${req.params.id}`,);
+    await page.waitForSelector('.article-text');
+    const image = await page.screenshot({
+      type: 'jpeg',
+      quality: 80,
+      clip: {
+        x: 600,
+        y: 350,
+        width: 800,
+        height: 730
       }
     });
     await browser.close();
