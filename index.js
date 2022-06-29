@@ -230,6 +230,7 @@ app.get('/virustotal', async (req, res) => {
       width: 1920,
       height: 1080,
     });
+    await page.setDefaultNavigationTimeout(15000);
 
     await page.setRequestInterception(true);
     page.on("request", (request) => {
